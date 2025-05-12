@@ -1,13 +1,10 @@
-import { Routes, useNavigate,Route } from 'react-router-dom';
-import Sidebar from './utilities/sidebar';
-import { SidebarItem } from './utilities/sidebaritem';
-import { Home, User, Settings } from 'lucide-react'; 
+import { Routes,Route } from 'react-router-dom';
 import Login from './pages/login';
 import MainPage from './pages/mainPage';
 import Add from './pages/agregar'; 
 import Register from './pages/register'; 
+import RegisterMedico from './pages/registerMedico';
 export default function App() {
-  const navigate = useNavigate();
 
   return (
     <Routes>
@@ -15,6 +12,7 @@ export default function App() {
       <Route path="/mainPage" element={<MainPage />} />
       <Route path='/agregar' element={<Add />} />
       <Route path='/register' element={<Register/>}/>
+      <Route path='/registerMedico' element={<RegisterMedico/>}/>
     </Routes>
   );
 }

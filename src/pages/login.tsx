@@ -1,33 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import { obtenerPacientePorDni, obtenerMedicoPorDni } from '../services/orquestador'; // Servicios para obtener datos
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [dni, setDni] = useState('');
+  const [isPaciente, setIsPaciente] = useState(true); // Por defecto seleccionamos paciente
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login con:', { email, password });
-    navigate('/mainPage');
+
+    if (!dni) {
+      setErrorMessage('Por favor ingresa tu DNI.');
+      return;
+    }
+
+    try {
+      let usuario;
+      if (isPaciente) {
+        // Si es paciente, obtenemos los datos de paciente
+        usuario = await obtenerPacientePorDni(dni);
+      } else {
+        // Si es médico, obtenemos los datos de médico
+        usuario = await obtenerMedicoPorDni(dni);
+      }
+
+      // Guardamos los datos del usuario en el almacenamiento local o en un estado global
+      localStorage.setItem('usuario', JSON.stringify(usuario));
+
+      // Redirigimos a la página principal
+      navigate('/mainPage');
+    } catch (error) {
+      console.error('Error al obtener datos del usuario:', error);
+      setErrorMessage('Hubo un problema al iniciar sesión. Intenta nuevamente.');
+    }
   };
 
   const handleRegisterRedirect = () => {
-    navigate('/register');
+    navigate('/register'); // Redirige al formulario de registro
   };
-
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes backgroundAnimation {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-    `;
-    document.head.appendChild(style);
-  }, []);
 
   const styles = {
     background: {
@@ -41,7 +54,7 @@ export default function Login() {
       background: 'linear-gradient(270deg, #3364ff, #003366, #00cfff)',
       backgroundSize: '600% 600%',
       animation: 'backgroundAnimation 15s infinite alternate',
-    } as React.CSSProperties,
+    },
     box: {
       backgroundColor: 'white',
       padding: '2rem',
@@ -49,7 +62,7 @@ export default function Login() {
       boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 0, 0, 0.15)',
       width: '320px',
       textAlign: 'center' as const,
-    } as React.CSSProperties,
+    },
     input: {
       width: '100%',
       height: '30px',
@@ -90,13 +103,17 @@ export default function Login() {
       display: 'inline-block',
       marginRight: '0.5rem',
       color: 'black',
-      fontSize: '0.87rem'
+      fontSize: '0.87rem',
     },
     registerLink: {
       color: '#3f6cfd',
       textDecoration: 'underline',
       cursor: 'pointer',
-      fontSize: '0.87rem'
+      fontSize: '0.87rem',
+    },
+    errorMessage: {
+      color: 'red',
+      marginTop: '1rem',
     },
   };
 
@@ -106,34 +123,43 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <h2 style={styles.title}>Identifícate:</h2>
           <img src={logo} alt="logo" style={styles.logo} />
+
+          {/* Campo de DNI */}
           <div>
-            <label style={styles.label}>Email:</label>
+            <label style={styles.label}>DNI:</label>
             <br />
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="medigo@gmail.com"
-              required
-              style={styles.input as React.CSSProperties}
-            />
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <label style={styles.label}>Contraseña:</label>
-            <br />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="contraseña"
+              type="text"
+              value={dni}
+              onChange={(e) => setDni(e.target.value)}
+              placeholder="12345678"
               required
               style={styles.input}
             />
           </div>
+
+          {/* Opción para elegir si es paciente o médico */}
+          <div style={{ marginTop: '1rem' }}>
+            <label style={styles.label}>Soy:</label>
+            <br />
+            <select
+              value={isPaciente ? 'paciente' : 'medico'}
+              onChange={(e) => setIsPaciente(e.target.value === 'paciente')}
+              style={styles.input}
+            >
+              <option value="paciente">Paciente</option>
+              <option value="medico">Médico</option>
+            </select>
+          </div>
+
+          {/* Error message */}
+          {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
+
           <button type="submit" style={styles.button}>
             Entrar
           </button>
         </form>
+
         <div style={styles.registerContainer}>
           <span style={styles.registerText}>¿Aún no estás registrado?</span>
           <span

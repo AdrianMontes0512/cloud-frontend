@@ -1,27 +1,27 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import { crearPaciente } from '../services/orquestador'; // Asegúrate de tener el servicio adecuado
+import { crearMedico } from '../services/orquestador'; 
 
-export default function Register() {
+export default function RegisterMedico() {
   const [nombres, setNombres] = useState('');
   const [apellidos, setApellidos] = useState('');
   const [dni, setDni] = useState('');
-  const [telefono, setTelefono] = useState('');
+  const [telefono] = useState('');
   const [email, setEmail] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [sexo, setSexo] = useState('');
-  const [direccion, setDireccion] = useState('');
-  const [seguroSalud, setSeguroSalud] = useState(false);
-  const [estadoCivil, setEstadoCivil] = useState('');
-  const [tipoSangre, setTipoSangre] = useState('');
+  const [direccion] = useState('');
+  const [especialidad, setEspecialidad] = useState('');
+  const [colegiatura, setColegiatura] = useState('');
+  const [horario, setHorario] = useState([{ dia: '', turnos: [{ inicio: '', fin: '' }] }]); 
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const pacienteData = {
+    const medicoData = {
       nombres,
       apellidos,
       dni,
@@ -30,24 +30,24 @@ export default function Register() {
       fechaNacimiento,
       sexo,
       direccion,
-      seguroSalud,
-      estadoCivil,
-      tipoSangre,
+      especialidad,
+      colegiatura,
+      horario,
       password: 'defaultPassword', 
     };
 
     try {
-      const pacienteCreado = await crearPaciente(pacienteData);
-      console.log('Paciente creado:', pacienteCreado);
+      const medicoCreado = await crearMedico(medicoData); 
+      console.log('Médico creado:', medicoCreado);
       navigate('/'); 
     } catch (error) {
-      console.error('Error al registrar paciente:', error);
-      setErrorMessage('Hubo un error al registrar el paciente. Intenta nuevamente.');
+      console.error('Error al registrar médico:', error);
+      setErrorMessage('Hubo un error al registrar el médico. Intenta nuevamente.');
     }
   };
 
   const handleRegisterMedico = () => {
-    navigate('/registerMedico'); // Cambia la ruta de redirección aquí si es necesario
+    navigate('/register'); 
   };
   const handleRegisterRedirect = () => {
     navigate('/');
@@ -178,12 +178,12 @@ export default function Register() {
   return (
     <div style={styles.background}>
       <button style={styles.redirectButton} onClick={handleRegisterMedico}>
-        Registrar Medico
+        Registrar Paciente
       </button>
 
       <div style={styles.box}>
         <form onSubmit={handleSubmit}>
-          <h2 style={styles.title}>Regístrate como Paciente:</h2>
+          <h2 style={styles.title}>Regístrate como Médico:</h2>
           <img src={logo} alt="logo" style={styles.logo} />
 
           {/* Inputs en dos columnas */}
@@ -264,71 +264,56 @@ export default function Register() {
             </div>
           </div>
 
+          {/* Campos Específicos para Médico */}
           <div style={styles.inputRow}>
             <div style={{ flex: 1 }}>
-              <label style={styles.label}>Dirección:</label>
+              <label style={styles.label}>Especialidad:</label>
               <input
                 type="text"
-                value={direccion}
-                onChange={(e) => setDireccion(e.target.value)}
-                placeholder="Calle Ficticia 123"
+                value={especialidad}
+                onChange={(e) => setEspecialidad(e.target.value)}
+                placeholder="Especialidad médica"
                 required
                 style={styles.inputHalf}
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={styles.label}>Número de Teléfono:</label>
+              <label style={styles.label}>Colegiatura:</label>
               <input
-                type="tel"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                placeholder="987654321"
+                type="text"
+                value={colegiatura}
+                onChange={(e) => setColegiatura(e.target.value)}
+                placeholder="Número de colegiatura"
                 required
                 style={styles.inputHalf}
               />
             </div>
           </div>
 
-          {/* Campos Opcionales */}
           <div style={styles.inputRow}>
             <div style={{ flex: 1 }}>
-              <label style={styles.label}>Seguro de Salud:</label>
+              <label style={styles.label}>Día de Trabajo:</label>
               <input
-                type="checkbox"
-                checked={seguroSalud}
-                onChange={(e) => setSeguroSalud(e.target.checked)}
+                type="text"
+                value={horario[0]?.dia}
+                onChange={(e) => setHorario([{ dia: e.target.value, turnos: [{ inicio: '', fin: '' }] }])}
+                placeholder="Día de trabajo"
+                required
+                style={styles.inputHalf}
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={styles.label}>Estado Civil:</label>
-              <select
-                value={estadoCivil}
-                onChange={(e) => setEstadoCivil(e.target.value)}
+              <label style={styles.label}>Turno de Inicio:</label>
+              <input
+                type="text"
+                value={horario[0]?.turnos[0]?.inicio}
+                onChange={(e) =>
+                  setHorario([{ dia: horario[0]?.dia, turnos: [{ inicio: e.target.value, fin: '' }] }])
+                }
+                placeholder="Inicio del turno"
+                required
                 style={styles.inputHalf}
-              >
-                <option value="">Selecciona</option>
-                <option value="Soltero">Soltero</option>
-                <option value="Casado">Casado</option>
-                <option value="Divorciado">Divorciado</option>
-                <option value="Viudo">Viudo</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={styles.inputRow}>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Tipo de Sangre:</label>
-              <select
-                value={tipoSangre}
-                onChange={(e) => setTipoSangre(e.target.value)}
-                style={styles.inputHalf}
-              >
-                <option value="">Selecciona</option>
-                <option value="A+">A+</option>
-                <option value="O+">O+</option>
-                <option value="B+">B+</option>
-                <option value="AB+">AB+</option>
-              </select>
+              />
             </div>
           </div>
 

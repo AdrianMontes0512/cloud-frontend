@@ -3,7 +3,7 @@ import {
   ChevronLast,
   ChevronFirst
 } from "lucide-react";
-import { createContext, useState, useContext, ReactNode } from "react";
+import { createContext, useState, ReactNode } from "react";
 import logo from '../assets/logo.png';
 
 type SidebarContextType = {
