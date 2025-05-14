@@ -1,350 +1,233 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
-import { crearPaciente } from '../services/orquestador'; // Asegúrate de tener el servicio adecuado
+import Sidebar from '../utilities/sidebar';
+import { SidebarItem } from '../utilities/sidebaritem';
+import { Home, Plus, Settings, LogOut } from 'lucide-react';
+import { buscarMedicos } from '../services/orquestador'; // Asegúrate de tener el servicio adecuado para buscar médicos
+import { obtenerCitasPorPaciente } from '../services/orquestador'; // Servicio para obtener citas de un paciente
 
-export default function Register() {
-  const [nombres, setNombres] = useState('');
-  const [apellidos, setApellidos] = useState('');
-  const [dni, setDni] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [email, setEmail] = useState('');
-  const [fechaNacimiento, setFechaNacimiento] = useState('');
-  const [sexo, setSexo] = useState('');
-  const [direccion, setDireccion] = useState('');
-  const [seguroSalud, setSeguroSalud] = useState(false);
-  const [estadoCivil, setEstadoCivil] = useState('');
-  const [tipoSangre, setTipoSangre] = useState('');
+export default function MainPage() {
+  const [especialidad, setEspecialidad] = useState('');
+  const [fechaHora, setFechaHora] = useState('');
+  const [medicos, setMedicos] = useState<any[]>([]);
+  const [historialCitas, setHistorialCitas] = useState<any[]>([]);
+  const [userData, setUserData] = useState<any>(null); 
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const pacienteId = localStorage.getItem('usuario') ? JSON.parse(localStorage.getItem('usuario') || '').dni : ''; // Recuperamos el pacienteId desde el localStorage
 
-    const pacienteData = {
-      nombres,
-      apellidos,
-      dni,
-      telefono,
-      email,
-      fechaNacimiento,
-      sexo,
-      direccion,
-      seguroSalud,
-      estadoCivil,
-      tipoSangre,
-      password: 'defaultPassword', 
+  const especialidades = ['Anestesiología', 'Cardiología', 'Dermatología', 'Endocrinología', 'Gastroenterología', 'Geriatría', 'Ginecología', 'Hematología', 'Infectología', 'Medicina del Trabajo', 'Medicina de Emergencia', 'Medicina General', 'Medicina Interna', 'Nefrología', 'Neumología', 'Neurología', 'Nutriología', 'Obstetricia', 'Oftalmología', 'Oncología', 'Ortopedia', 'Otorrinolaringología', 'Pediatría', 'Psiquiatría', 'Radiología', 'Reumatología', 'Traumatología', 'Urología', 'Cirugía General', 'Cirugía Plástica', 'Cirugía Cardiovascular', 'Cirugía Pediátrica', 'Cirugía Neurológica'];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const storedUser = localStorage.getItem('usuario');
+      if (storedUser) {
+        setUserData(JSON.parse(storedUser));
+      }
+
+      try {
+        const citas = await obtenerCitasPorPaciente(pacienteId); 
+        setHistorialCitas(citas); 
+      } catch (error) {
+        console.error('Error al obtener el historial de citas', error);
+        setErrorMessage('Hubo un problema al obtener el historial de citas.');
+      }
     };
 
+    fetchData();
+  }, [pacienteId]);
+
+  const handleBuscar = async () => {
+    if (!especialidad || !fechaHora) {
+      setErrorMessage('Por favor selecciona tanto la especialidad como la fecha/hora.');
+      return;
+    }
     try {
-      const pacienteCreado = await crearPaciente(pacienteData);
-      console.log('Paciente creado:', pacienteCreado);
-      navigate('/'); 
+      const medicosDisponibles = await buscarMedicos(especialidad, fechaHora);
+      setMedicos(medicosDisponibles);
+      setErrorMessage('');
     } catch (error) {
-      console.error('Error al registrar paciente:', error);
-      setErrorMessage('Hubo un error al registrar el paciente. Intenta nuevamente.');
+      console.error('Error al obtener médicos', error);
+      setErrorMessage('No se encontraron médicos para la especialidad y la fecha seleccionada.');
     }
   };
 
-  const handleRegisterMedico = () => {
-    navigate('/registerMedico'); // Cambia la ruta de redirección aquí si es necesario
-  };
-  const handleRegisterRedirect = () => {
+  const handleLogout = () => {
+    localStorage.removeItem('usuario');
     navigate('/');
   };
 
-  const styles = {
-    background: {
-      height: '100vh',
-      width: '100vw',
-      margin: 0,
-      padding: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      background: 'linear-gradient(270deg, #3364ff, #003366, #00cfff)',
-      backgroundSize: '600% 600%',
-      animation: 'backgroundAnimation 15s infinite alternate',
-    },
-    box: {
-      backgroundColor: 'white',
-      padding: '2rem',
-      borderRadius: '20px',
-      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 0, 0, 0.15)',
-      width: '640px',
-      textAlign: 'center' as React.CSSProperties['textAlign'],
-    },
-    input: {
-      width: '100%',
-      height: '30px',
-      backgroundColor: 'white',
-      border: '1px solid black',
-      borderRadius: '10px',
-      textAlign: 'center' as React.CSSProperties['textAlign'],
-      color: 'black',
-    },
-    inputRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      gap: '1rem',
-      marginTop: '1rem',
-      width: '100%',
-      flexWrap: 'wrap' as React.CSSProperties['flexWrap'],
-    },
-    inputHalf: {
-      width: '100%',
-      height: '35px',
-      backgroundColor: 'white',
-      border: '1px solid black',
-      borderRadius: '10px',
-      textAlign: 'center' as React.CSSProperties['textAlign'],
-      color: 'black',
-      marginBottom: '1rem',
-    },
-    button: {
-      marginTop: '1.5rem',
-      width: '100%',
-      backgroundColor: '#3364ff',
-      color: 'white',
-      padding: '0.5rem',
-      border: 'none',
-      borderRadius: '10px',
-      cursor: 'pointer',
-    },
-    label: {
-      color: 'black',
-      display: 'block',
-      marginBottom: '0.2rem',
-      fontSize: '1rem',
-      textAlign: 'center' as const,
-    },
-    logo: {
-      display: 'block',
-      margin: '0 auto',
-      width: '150px',
-      height: 'auto',
-      marginBottom: '1rem',
-    },
-    title: {
-      color: 'black',
-    },
-    loginContainer: {
-      marginTop: '1rem',
-      textAlign: 'center' as const,
-    },
-    loginText: {
-      fontSize: '0.875rem',
-      color: 'black',
-    },
-    loginLink: {
-      fontSize: '0.875rem',
-      color: '#3f6cfd',
-      textDecoration: 'underline',
-      cursor: 'pointer',
-    },
-    errorMessage: {
-      color: 'red',
-      marginTop: '1rem',
-    },
-    redirectButton: {
-      position: 'absolute' as React.CSSProperties['position'],
-      top: '20px',
-      right: '20px',
-      backgroundColor: '#4CAF50',
-      color: 'white',
-      padding: '10px 20px',
-      border: 'none',
-      borderRadius: '5px',
-      cursor: 'pointer',
-    },
-    registerContainer: {
-      marginTop: '1rem',
-      textAlign: 'center' as const,
-    },
-    registerText: {
-      display: 'inline-block',
-      marginRight: '0.5rem',
-      color: 'black',
-      fontSize: '0.87rem'
-    },
-    registerLink: {
-      color: '#3f6cfd',
-      textDecoration: 'underline',
-      cursor: 'pointer',
-      fontSize: '0.87rem'
-    },
-  };
-
   return (
-    <div style={styles.background}>
-      <button style={styles.redirectButton} onClick={handleRegisterMedico}>
-        Registrar Medico
-      </button>
+    <div
+      style={{
+        display: 'flex',
+        height: '100vh',
+        width: '100vw',
+        background: 'linear-gradient(145deg, #6e7fcb, #4c6f9b)',
+        color: '#333',
+        fontFamily: 'Arial, sans-serif',
+      }}
+    >
+      <Sidebar>
+        <SidebarItem icon={<Home />} text="Inicio" active onClick={() => navigate('/mainPage')} />
+        <SidebarItem icon={<Plus />} text="Crear Cita" onClick={() => navigate('/agregar')} />
+        <SidebarItem icon={<Settings />} text="Configuración" onClick={() => navigate('/configuracion')} />
+        <SidebarItem icon={<LogOut />} text="Cerrar sesión" onClick={handleLogout} />
+      </Sidebar>
 
-      <div style={styles.box}>
-        <form onSubmit={handleSubmit}>
-          <h2 style={styles.title}>Regístrate como Paciente:</h2>
-          <img src={logo} alt="logo" style={styles.logo} />
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          padding: '30px',
+        }}
+      >
+        <h1 style={{ color: '#fff', fontSize: '2.5rem', marginBottom: '20px' }}>
+          Bienvenido, {userData ? userData.nombres : 'Cargando...'}!
+        </h1>
+        <p style={{ color: '#fff', fontSize: '1.2rem' }}>¡Estamos encantados de tenerte aquí! ¿Qué te gustaría hacer hoy?</p>
 
-          {/* Inputs en dos columnas */}
-          <div style={styles.inputRow}>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Nombres:</label>
-              <input
-                type="text"
-                value={nombres}
-                onChange={(e) => setNombres(e.target.value)}
-                placeholder="Juan"
-                required
-                style={styles.inputHalf}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Apellidos:</label>
-              <input
-                type="text"
-                value={apellidos}
-                onChange={(e) => setApellidos(e.target.value)}
-                placeholder="Pérez"
-                required
-                style={styles.inputHalf}
-              />
-            </div>
-          </div>
-
-          <div style={styles.inputRow}>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Correo Electrónico:</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="correo@example.com"
-                required
-                style={styles.inputHalf}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>DNI:</label>
-              <input
-                type="text"
-                value={dni}
-                onChange={(e) => setDni(e.target.value)}
-                placeholder="12345678"
-                required
-                style={styles.inputHalf}
-              />
-            </div>
-          </div>
-
-          <div style={styles.inputRow}>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Fecha de Nacimiento:</label>
-              <input
-                type="date"
-                value={fechaNacimiento}
-                onChange={(e) => setFechaNacimiento(e.target.value)}
-                required
-                style={styles.inputHalf}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Sexo:</label>
-              <select
-                value={sexo}
-                onChange={(e) => setSexo(e.target.value)}
-                required
-                style={styles.inputHalf}
-              >
-                <option value="">Selecciona</option>
-                <option value="Masculino">Masculino</option>
-                <option value="Femenino">Femenino</option>
-                <option value="Prefiero no decir">Prefiero no decir</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={styles.inputRow}>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Dirección:</label>
-              <input
-                type="text"
-                value={direccion}
-                onChange={(e) => setDireccion(e.target.value)}
-                placeholder="Calle Ficticia 123"
-                required
-                style={styles.inputHalf}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Número de Teléfono:</label>
-              <input
-                type="tel"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                placeholder="987654321"
-                required
-                style={styles.inputHalf}
-              />
-            </div>
-          </div>
-
-          {/* Campos Opcionales */}
-          <div style={styles.inputRow}>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Seguro de Salud:</label>
-              <input
-                type="checkbox"
-                checked={seguroSalud}
-                onChange={(e) => setSeguroSalud(e.target.checked)}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Estado Civil:</label>
-              <select
-                value={estadoCivil}
-                onChange={(e) => setEstadoCivil(e.target.value)}
-                style={styles.inputHalf}
-              >
-                <option value="">Selecciona</option>
-                <option value="Soltero">Soltero</option>
-                <option value="Casado">Casado</option>
-                <option value="Divorciado">Divorciado</option>
-                <option value="Viudo">Viudo</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={styles.inputRow}>
-            <div style={{ flex: 1 }}>
-              <label style={styles.label}>Tipo de Sangre:</label>
-              <select
-                value={tipoSangre}
-                onChange={(e) => setTipoSangre(e.target.value)}
-                style={styles.inputHalf}
-              >
-                <option value="">Selecciona</option>
-                <option value="A+">A+</option>
-                <option value="O+">O+</option>
-                <option value="B+">B+</option>
-                <option value="AB+">AB+</option>
-              </select>
-            </div>
-          </div>
-
-          {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
-          <button type="submit" style={styles.button}>
-            Registrarse
-          </button>
-        </form>
-        <div style={styles.registerContainer}>
-          <span style={styles.registerText}>¿Ya estas registrado?</span>
-          <span
-            style={styles.registerLink}
-            onClick={handleRegisterRedirect}
+        <div
+          style={{
+            display: 'flex',
+            gap: '30px',
+            marginTop: '20px',
+            height: '100%',
+            width: '100%',
+            maxWidth: '1000px',
+            marginBottom: '40px',
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              padding: '20px',
+              backgroundColor: '#fff',
+              borderRadius: '15px',
+              boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+              minHeight: '200px',
+            }}
           >
-            Login
-          </span>
+            <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Historial de Citas</h3>
+            <div
+              style={{
+                height: '100%',
+                overflowY: 'auto',
+                padding: '10px',
+                borderRadius: '8px',
+                backgroundColor: '#f9f9f9',
+              }}
+            >
+              <ul style={{ listStyleType: 'none', padding: 0 }}>
+                {historialCitas.length === 0 ? (
+                  <li>No tienes citas registradas.</li>
+                ) : (
+                  historialCitas.map((cita, index) => (
+                    <li key={index} style={{ marginBottom: '15px', fontSize: '1rem' }}>
+                      <strong>{cita.medico}</strong> ({cita.especialidad}) -{' '}
+                      <span>{cita.fecha}</span> - Estado: {cita.estado}
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          </div>
+
+          <div
+            style={{
+              flex: 1,
+              padding: '20px',
+              backgroundColor: '#fff',
+              borderRadius: '15px',
+              boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Buscar Médico</h3>
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '10px' }}>Especialidad</label>
+                <select
+                  value={especialidad}
+                  onChange={(e) => setEspecialidad(e.target.value)}
+                  style={{
+                    padding: '12px',
+                    width: '100%',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <option value="">Selecciona una especialidad</option>
+                  {especialidades.map((esp) => (
+                    <option key={esp} value={esp}>{esp}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '10px' }}>Fecha y Hora</label>
+                <input
+                  type="datetime-local"
+                  value={fechaHora}
+                  onChange={(e) => setFechaHora(e.target.value)}
+                  style={{
+                    padding: '12px',
+                    width: '100%',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginBottom: '20px',
+                padding: '10px',
+                backgroundColor: '#f9f9f9',
+                borderRadius: '8px',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                maxHeight: '200px',
+                overflowY: 'auto',
+              }}
+            >
+              <h4>Lista de Médicos</h4>
+              <ul style={{ listStyleType: 'none', padding: 0 }}>
+                {medicos.length === 0 ? (
+                  <li>No hay médicos disponibles para la especialidad y la fecha seleccionada.</li>
+                ) : (
+                  medicos.map((medico, index) => (
+                    <li key={index} style={{ marginBottom: '10px' }}>
+                      <strong>{medico.nombre}</strong> ({medico.especialidad}) -{' '}
+                      <span>Disponibilidad: {medico.disponibilidad}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+            {errorMessage && <p style={{ color: 'red', marginTop: '20px' }}>{errorMessage}</p>}
+
+            <button
+              style={{
+                padding: '12px 20px',
+                backgroundColor: '#4c6f9b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                width: '100%',
+                fontSize: '1.1rem',
+              }}
+              onClick={handleBuscar}
+            >
+              Buscar Médicos
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ export const API_ORQUESTADOR = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
+//proyectocloudc-628467818.us-east-1.elb.amazonaws.com:8002
 // **POST /orquestador/citas** - Crear una nueva cita médica
 export const crearCita = async (citaData: {
   especialidad: string;
@@ -208,7 +208,6 @@ export const buscarMedicos = async (especialidad: string, dia: string) => {
   }
 };
 
-// **POST /orquestador/personas/paciente** - Crear un nuevo paciente
 export const crearPaciente = async (pacienteData: {
   apellidos: string;
   direccion: string;

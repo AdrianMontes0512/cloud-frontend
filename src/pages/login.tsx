@@ -18,17 +18,19 @@ export default function Login() {
     }
 
     try {
+      // ...existing code...
       let usuario;
       if (isPaciente) {
-        // Si es paciente, obtenemos los datos de paciente
         usuario = await obtenerPacientePorDni(dni);
       } else {
-        // Si es médico, obtenemos los datos de médico
         usuario = await obtenerMedicoPorDni(dni);
       }
 
-      // Guardamos los datos del usuario en el almacenamiento local o en un estado global
-      localStorage.setItem('usuario', JSON.stringify(usuario));
+      // Asegura que el objeto guardado tenga el dni
+      const usuarioConDni = { ...usuario, dni };
+
+      localStorage.setItem('usuario', JSON.stringify(usuarioConDni));
+      // ...existing code...
 
       // Redirigimos a la página principal
       navigate('/mainPage');
