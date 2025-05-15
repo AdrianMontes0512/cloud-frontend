@@ -11,7 +11,6 @@ export const API_ORQUESTADOR = axios.create({
 export const crearCita = async (citaData: {
   especialidad: string;
   fecha_hora: string;
-  idcita: string;
   iddoctor: string;
   idpaciente: string;
   tipo: string;
@@ -115,6 +114,10 @@ export const crearExamen = async (examenData: {
   medicoId: string;
   pacienteId: string;
   resultado: string;
+  diagnostico: string;
+  especialidad: string;
+  fechaSolicitud: string;
+
 }) => {
   try {
     const response = await API_ORQUESTADOR.post('/orquestador/examenes', examenData);

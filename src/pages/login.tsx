@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import { obtenerPacientePorDni, obtenerMedicoPorDni } from '../services/orquestador'; // Servicios para obtener datos
+import { obtenerPacientePorDni, obtenerMedicoPorDni } from '../services/orquestador'; 
 
 export default function Login() {
   const [dni, setDni] = useState('');
-  const [isPaciente, setIsPaciente] = useState(true); // Por defecto seleccionamos paciente
+  const [isPaciente, setIsPaciente] = useState(true); 
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
@@ -18,22 +18,18 @@ export default function Login() {
     }
 
     try {
-      // ...existing code...
       let usuario;
       if (isPaciente) {
         usuario = await obtenerPacientePorDni(dni);
+        const usuarioConDni = { ...usuario, dni };
+        localStorage.setItem('usuario', JSON.stringify(usuarioConDni));
+        navigate('/mainPage');
       } else {
         usuario = await obtenerMedicoPorDni(dni);
+        const usuarioConDni = { ...usuario, dni };
+        localStorage.setItem('usuario', JSON.stringify(usuarioConDni));
+        navigate('/mainDoctor');
       }
-
-      // Asegura que el objeto guardado tenga el dni
-      const usuarioConDni = { ...usuario, dni };
-
-      localStorage.setItem('usuario', JSON.stringify(usuarioConDni));
-      // ...existing code...
-
-      // Redirigimos a la página principal
-      navigate('/mainPage');
     } catch (error) {
       console.error('Error al obtener datos del usuario:', error);
       setErrorMessage('Hubo un problema al iniciar sesión. Intenta nuevamente.');
@@ -41,7 +37,7 @@ export default function Login() {
   };
 
   const handleRegisterRedirect = () => {
-    navigate('/register'); // Redirige al formulario de registro
+    navigate('/register'); 
   };
 
   const styles = {
@@ -126,7 +122,6 @@ export default function Login() {
           <h2 style={styles.title}>Identifícate:</h2>
           <img src={logo} alt="logo" style={styles.logo} />
 
-          {/* Campo de DNI */}
           <div>
             <label style={styles.label}>DNI:</label>
             <br />
@@ -140,7 +135,6 @@ export default function Login() {
             />
           </div>
 
-          {/* Opción para elegir si es paciente o médico */}
           <div style={{ marginTop: '1rem' }}>
             <label style={styles.label}>Soy:</label>
             <br />
@@ -154,7 +148,6 @@ export default function Login() {
             </select>
           </div>
 
-          {/* Error message */}
           {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
 
           <button type="submit" style={styles.button}>

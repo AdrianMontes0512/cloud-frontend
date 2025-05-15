@@ -264,7 +264,6 @@ export default function RegisterMedico() {
             </div>
           </div>
 
-          {/* Campos Específicos para Médico */}
           <div style={styles.inputRow}>
             <div style={{ flex: 1 }}>
               <label style={styles.label}>Especialidad:</label>

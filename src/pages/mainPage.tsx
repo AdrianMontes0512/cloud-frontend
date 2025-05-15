@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../utilities/sidebar';
 import { SidebarItem } from '../utilities/sidebaritem';
-import { Home, Plus, Settings, LogOut } from 'lucide-react';
+import { Home, Plus} from 'lucide-react';
 import { buscarMedicos } from '../services/orquestador'; 
 import { obtenerCitasPorPaciente } from '../services/orquestador'; 
 
@@ -21,8 +21,6 @@ export default function MainPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log(JSON.parse(localStorage.getItem('usuario') || ''));
-      console.log('Cargando datos del usuario desde localStorage');
       const storedUser = localStorage.getItem('usuario');
       if (storedUser) {
         setUserData(JSON.parse(storedUser));
@@ -57,17 +55,13 @@ export default function MainPage() {
   try {
     const medicosDisponibles = await buscarMedicos(especialidad, dia); 
     setMedicos(medicosDisponibles);
+    console.log('Médicos disponibles:', medicosDisponibles);
     setErrorMessage('');
   } catch (error) {
     console.error('Error al obtener médicos', error);
     setErrorMessage('No se encontraron médicos para la especialidad y el día seleccionado.');
   }
 };
-
-  const handleLogout = () => {
-    localStorage.removeItem('usuario'); 
-    navigate('/'); 
-  };
 
   return (
     <div
@@ -83,8 +77,6 @@ export default function MainPage() {
       <Sidebar>
         <SidebarItem icon={<Home />} text="Inicio" active onClick={() => navigate('/mainPage')} />
         <SidebarItem icon={<Plus />} text="Crear Cita" onClick={() => navigate('/agregar')} />
-        <SidebarItem icon={<Settings />} text="Configuración" onClick={() => navigate('/configuracion')} />
-        <SidebarItem icon={<LogOut />} text="Cerrar sesión" onClick={handleLogout} />
       </Sidebar>
 
       <div
@@ -280,6 +272,29 @@ export default function MainPage() {
                           )}
                         </ul>
                       </div>
+                      <button
+                        style={{
+                          marginTop: '12px',
+                          padding: '10px 18px',
+                          backgroundColor: '#4c6f9b',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                          width: '100%',
+                        }}
+                        onClick={() =>
+                          navigate('/agregar', {
+                            state: {
+                              especialidad: medico.especialidad,
+                              medicoDni: medico.dni || medico.dni_medico || medico.medicoDni || medico.id || '', // Ajusta según tu backend
+                            },
+                          })
+                        }
+                      >
+                        Agendar cita
+                      </button>
                     </li>
                   ))
                 )}

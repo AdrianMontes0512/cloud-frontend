@@ -1,48 +1,62 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; 
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../utilities/sidebar';
 import { SidebarItem } from '../utilities/sidebaritem';
-import { Home,Plus } from 'lucide-react';
-import { crearCita } from '../services/orquestador'; 
+import { Home } from 'lucide-react';
+import { crearExamen } from '../services/orquestador';
 
-export default function MainPage() {
+export default function GenerarExamen() {
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
 
-  const pacienteDni = localStorage.getItem('usuario')
-    ? JSON.parse(localStorage.getItem('usuario') || '{}').dni
-    : '';
+  const citaId = location.state?.idCita || '';
+  const medicoId = location.state?.idDoctor || '';
+  const pacienteId = location.state?.idPaciente || '';
+  const diagnostico = location.state?.diagnostico || '';
+  const especialidad = location.state?.especialidad || '';
+  const fechaSolicitud = location.state?.fechaSolicitud || location.state?.fecha || '';
 
-  const [especialidad, setEspecialidad] = useState(location.state?.especialidad || '');
-  const [fechaHora, setFechaHora] = useState('');
-  const [idDoctor, setIdDoctor] = useState(location.state?.medicoDni || '');
-  const [idPaciente, setIdPaciente] = useState(pacienteDni); 
-  const [tipo, setTipo] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [resultado, setResultado] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [diagnosticoInput, setDiagnosticoInput] = useState(diagnostico);
+  const [fechaSolicitudInput, setFechaSolicitudInput] = useState(fechaSolicitud);
 
-  const handleCrearCita = async (e: React.FormEvent) => {
+  const handleCrearExamen = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!especialidad || !fechaHora || !idDoctor || !idPaciente || !tipo) {
+    if (!citaId || !descripcion || !medicoId || !pacienteId || !resultado || !diagnosticoInput || !especialidad || !fechaSolicitudInput) {
       setErrorMessage('Todos los campos son obligatorios');
+      setSuccessMessage('');
       return;
     }
 
-    const fechaHoraAjustada = fechaHora; 
-
     try {
-      await crearCita({
+      console.log('Datos del examen:', {
+        citaId,
+        descripcion,
+        medicoId,
+        pacienteId,
+        resultado,
+        diagnostico: diagnosticoInput,
         especialidad,
-        fecha_hora: fechaHoraAjustada,
-        iddoctor: idDoctor,
-        idpaciente: idPaciente,
-        tipo,
+        fechaSolicitud: fechaSolicitudInput,
       });
-      setSuccessMessage('Cita creada correctamente');
+      await crearExamen({
+        citaId,
+        descripcion,
+        medicoId,
+        pacienteId,
+        resultado,
+        diagnostico: diagnosticoInput,
+        especialidad,
+        fechaSolicitud: fechaSolicitudInput,
+      });
+      setSuccessMessage('Examen generado correctamente');
       setErrorMessage('');
     } catch (error) {
-      setErrorMessage('Error al crear la cita');
+      setErrorMessage('Error al generar el examen');
       setSuccessMessage('');
     }
   };
@@ -50,86 +64,67 @@ export default function MainPage() {
   return (
     <div style={styles.container}>
       <Sidebar>
-        <SidebarItem icon={<Home />} text="Inicio" onClick={() => navigate('/mainPage')} />
-        <SidebarItem icon={<Plus />} text="Crear Cita" active onClick={() => navigate('/agregar')} />
+        <SidebarItem icon={<Home />} text="Inicio" onClick={() => navigate('/mainDoctor')} />
       </Sidebar>
 
       <div style={styles.mainContent}>
-        <h1 style={styles.title}>Crear Cita Médica</h1>
-
+        <h1 style={styles.title}>Generar Examen Médico</h1>
         {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
         {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
-        <form onSubmit={handleCrearCita} style={styles.form}>
+        <form onSubmit={handleCrearExamen} style={styles.form}>
           <div style={styles.formRow}>
             <div style={styles.formGroup}>
-              <label>Especialidad:</label>
+              <label>Descripción:</label>
               <input
                 type="text"
-                value={especialidad}
-                onChange={(e) => setEspecialidad(e.target.value)}
-                placeholder="Especialidad"
+                value={descripcion}
+                onChange={e => setDescripcion(e.target.value)}
                 style={styles.input}
                 required
+                placeholder="Descripción del examen"
+                maxLength={200}
               />
             </div>
-
             <div style={styles.formGroup}>
-              <label>Fecha y Hora:</label>
+              <label>Resultado:</label>
+              <input
+                type="text"
+                value={resultado}
+                onChange={e => setResultado(e.target.value)}
+                style={styles.input}
+                required
+                placeholder="Resultado del examen"
+                maxLength={200}
+              />
+            </div>
+          </div>
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label>Diagnóstico:</label>
+              <input
+                type="text"
+                value={diagnosticoInput}
+                onChange={e => setDiagnosticoInput(e.target.value)}
+                style={styles.input}
+                required
+                placeholder="Diagnóstico"
+                maxLength={200}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label>Fecha de Solicitud:</label>
               <input
                 type="datetime-local"
-                value={fechaHora}
-                onChange={(e) => setFechaHora(e.target.value)}
+                value={fechaSolicitudInput}
+                onChange={e => setFechaSolicitudInput(e.target.value)}
                 style={styles.input}
                 required
               />
             </div>
           </div>
-
-          <div style={styles.formRow}>
-            <div style={styles.formGroup}>
-              <label>ID del Doctor:</label>
-              <input
-                type="text"
-                value={idDoctor}
-                onChange={(e) => setIdDoctor(e.target.value)}
-                placeholder="ID del doctor"
-                style={styles.input}
-                required
-              />
-            </div>
-            <div style={styles.formGroup}>
-              <label>ID del Paciente:</label>
-              <input
-                type="text"
-                value={idPaciente}
-                onChange={(e) => setIdPaciente(e.target.value)}
-                placeholder="ID del paciente"
-                style={styles.input}
-                required
-              />
-            </div>
-          </div>
-
-          <div style={styles.formRow}>
-            <div style={styles.formGroup}>
-              <label>Tipo de Cita:</label>
-              <input
-                type="text"
-                value={tipo}
-                onChange={(e) => setTipo(e.target.value)}
-                placeholder="Tipo de cita"
-                style={styles.input}
-                required
-              />
-            </div>
-          </div>
-
-          <button
-            style={styles.button}
-            type="submit"
-          >
-            Crear Cita
+          <button style={styles.button} type="submit">
+            Generar Examen
           </button>
         </form>
       </div>
@@ -177,11 +172,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     flexDirection: 'column',
   },
-  label: {
-    fontSize: '14px',
-    marginBottom: '5px',
-    color: '#333',
-  },
   input: {
     width: '100%',
     padding: '12px',
@@ -196,7 +186,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   button: {
     marginTop: '20px',
     padding: '12px 20px',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2196F3',
     color: 'white',
     fontSize: '16px',
     fontWeight: 'bold',
